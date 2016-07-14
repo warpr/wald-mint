@@ -1,5 +1,8 @@
 image: node:4.4.5
 
+services:
+  - redis:latest
+
 all_tests:
   script:
    - npm install

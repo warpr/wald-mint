@@ -39,7 +39,7 @@
     const zbase32 = require ('zbase32');
 
     function redisConnection () {
-        const client = redis.createClient ({
+        const client = redis.createClient ('redis://redis', {
             prefix: 'https://test.waldmeta.org/mint/',
             string_numbers: true,
         });
