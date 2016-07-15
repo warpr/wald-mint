@@ -38,8 +38,13 @@
     const when = require ('when');
     const zbase32 = require ('zbase32');
 
+    let redisUri = 'redis://127.0.0.1';
+    if (process && process.env && process.env.WALD_MINT_REDIS) {
+        redisUri = process.env.WALD_MINT_REDIS;
+    }
+
     function redisConnection () {
-        const client = redis.createClient ('redis://redis', {
+        const client = redis.createClient (redisUri, {
             prefix: 'https://test.waldmeta.org/mint/',
             string_numbers: true,
         });
