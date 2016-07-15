@@ -58,10 +58,10 @@
             const client = redisConnection ();
 
             const getValue = nodefn.lift (client.get.bind (client));
+            const setValue = nodefn.lift (client.set.bind (client));
 
-            client.set ('redisTest', 23);
-
-            getValue ('redisTest')
+            setValue ('redisTest', 23)
+                .then (_ => getValue ('redisTest'))
                 .then (reply => assert.strictEqual ('23', reply))
                 .then (_ => when (client.incr ('redisTest')))
                 .then (_ => getValue ('redisTest'))
@@ -73,7 +73,7 @@
         });
     });
 
-    suite ('wald:mint', function () {
+    suite ('internals', function () {
         test ('hex string to ArrayBuffer', function () {
             assert.deepEqual (
                 new Uint8Array ([0xCA, 0x55, 0xE7, 0x7E, 0x00, 0xDE, 0xCA, 0xDE]),
@@ -131,27 +131,72 @@
 
             jsverify.assert (roundtrip);
         });
+    });
 
+    suite ('wald:mint', function () {
         test ('minter', function (done) {
             const client = redisConnection ();
+            const setValue = nodefn.lift (client.set.bind (client));
 
             const cfg = {
-                baseUrl: 'https://test.waldmeta.org/mint/',
-                shortUrl: 'https://t.waldmeta.org/',
+                baseUri: 'https://test.waldmeta.org/mint/',
+                shortUri: 'https://t.waldmeta.org/',
                 entities: {
                     artist: 'ar',
                     song: 'so',
                 }
             };
 
-            client.set ('artist', 0);
-            client.set ('song', 0);
+            const minter = mint.factory (cfg);
+
+            setValue ('artist', 0)
+                .then (_ => setValue ('song', 0))
+                .then (_ => minter.newId ('artist'))
+                .then (id => {
+                    assert.strictEqual ('1', id.seq);
+                    assert.strictEqual ('aryb', id.zbase32);
+                    assert.strictEqual ('https://test.waldmeta.org/mint/artist/aryb', id.uri);
+                    assert.strictEqual ('https://t.waldmeta.org/aryb', id.shortUri);
+                })
+                .then (_ => minter.newId ('artist'))
+                .then (id => {
+                    assert.strictEqual ('2', id.seq);
+                    assert.strictEqual ('aryn', id.zbase32);
+                    assert.strictEqual ('https://test.waldmeta.org/mint/artist/aryn', id.uri);
+                    assert.strictEqual ('https://t.waldmeta.org/aryn', id.shortUri);
+                })
+                .then (_ => minter.newId ('song'))
+                .then (id => {
+                    assert.strictEqual ('1', id.seq);
+                    assert.strictEqual ('soyb', id.zbase32);
+                    assert.strictEqual ('https://test.waldmeta.org/mint/song/soyb', id.uri);
+                    assert.strictEqual ('https://t.waldmeta.org/soyb', id.shortUri);
+                })
+                .then (done);
+        });
+
+        test ('minter (no shortUri)', function (done) {
+            const client = redisConnection ();
+            const setValue = nodefn.lift (client.set.bind (client));
+
+            const cfg = {
+                baseUri: 'https://test.waldmeta.org/mint/',
+                entities: {
+                    song: 'so',
+                }
+            };
 
             const minter = mint.factory (cfg);
 
-            minter.newId ('artist')
-             .then (id => assert.equal (1, id))
-             .then (done);
+            setValue ('song', 999999)
+                .then (_ => minter.newId ('song'))
+                .then (id => {
+                    assert.strictEqual ('1000000', id.seq);
+                    assert.strictEqual ('soxejyy', id.zbase32);
+                    assert.strictEqual ('https://test.waldmeta.org/mint/song/soxejyy', id.uri);
+                    assert.isUndefined (id.shortUri);
+                })
+                .then (done);
         });
     });
 }));
