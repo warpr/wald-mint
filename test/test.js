@@ -60,7 +60,6 @@
             const getValue = nodefn.lift (client.get.bind (client));
             const setValue = nodefn.lift (client.set.bind (client));
 
-
             setValue ('mint/redisTest', 23)
                 .then (_ => getValue ('mint/redisTest'))
                 .then (reply => assert.strictEqual ('23', reply))
@@ -150,7 +149,6 @@
 
             const minter = mint.factory (cfg);
 
-
             setValue ('mint/artist', 0)
                 .then (_ => setValue ('mint/song', 0))
                 .then (_ => minter.newId ('artist'))
@@ -190,11 +188,7 @@
 
             const minter = mint.factory (cfg);
 
-<<<<<<< HEAD
-            setValue ('song', 999999)
-=======
             setValue ('mint/song', 999999)
->>>>>>> skolemize
                 .then (_ => minter.newId ('song'))
                 .then (id => {
                     assert.strictEqual ('1000000', id.seq);
@@ -203,8 +197,6 @@
                     assert.isUndefined (id.shortUri);
                 })
                 .then (done);
-<<<<<<< HEAD
-=======
         });
 
         test ('minter (skolemize)', function (done) {
@@ -230,7 +222,6 @@
                     assert.isUndefined (id.shortUri);
                 })
                 .then (done);
->>>>>>> skolemize
         });
     });
 }));
