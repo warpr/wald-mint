@@ -66,10 +66,21 @@ Blank nodes
 
 In some systems you don't want to manage blank nodes, and it may be useful to
 [skolemize](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#section-skolemization)
-them.  wald:mint has special support for that.
+them.  wald:mint can generate unique skolemized blank nodes:
 
-    minter.bnode ().then (uri => console.log (uri));
-    // 'https://example.org/.well-known/genid/bnxejyy'
+    minter.bnode ().then (uri => console.log (id));
+    // id.seq   => '1000000'
+    // id.bnode => '_:bxejyy'
+    // id.uri   => 'https://example.org/.well-known/genid/_bxejyy'
+
+
+Limitations
+-----------
+
+wald:mint currently uses redis to persistenly store the last used identifier for each
+entity, and atomically increment those identifiers.  redis is limited to 64-bit signed
+integers, so at most 9,223,372,036,854,775,807 identifiers can be generated for each
+type of entity (including blank nodes).
 
 
 License

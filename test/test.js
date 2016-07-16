@@ -157,6 +157,7 @@
                     assert.strictEqual ('aryb', id.zbase32);
                     assert.strictEqual ('https://test.waldmeta.org/mint/artist/aryb', id.uri);
                     assert.strictEqual ('https://t.waldmeta.org/aryb', id.shortUri);
+                    assert.isUndefined (id.bnode);
                 })
                 .then (_ => minter.newId ('artist'))
                 .then (id => {
@@ -164,6 +165,7 @@
                     assert.strictEqual ('aryn', id.zbase32);
                     assert.strictEqual ('https://test.waldmeta.org/mint/artist/aryn', id.uri);
                     assert.strictEqual ('https://t.waldmeta.org/aryn', id.shortUri);
+                    assert.isUndefined (id.bnode);
                 })
                 .then (_ => minter.newId ('song'))
                 .then (id => {
@@ -171,6 +173,7 @@
                     assert.strictEqual ('soyb', id.zbase32);
                     assert.strictEqual ('https://test.waldmeta.org/mint/song/soyb', id.uri);
                     assert.strictEqual ('https://t.waldmeta.org/soyb', id.shortUri);
+                    assert.isUndefined (id.bnode);
                 })
                 .then (done);
         });
@@ -195,6 +198,7 @@
                     assert.strictEqual ('soxejyy', id.zbase32);
                     assert.strictEqual ('https://test.waldmeta.org/mint/song/soxejyy', id.uri);
                     assert.isUndefined (id.shortUri);
+                    assert.isUndefined (id.bnode);
                 })
                 .then (done);
         });
@@ -210,13 +214,14 @@
 
             const minter = mint.factory (cfg);
 
-            setValue ('.well-known/genid', 99999999)
+            setValue ('.well-known/genid', '9223372036854775806')
                 .then (_ => minter.bnode ())
                 .then (id => {
-                    assert.strictEqual ('100000000', id.seq);
-                    assert.strictEqual ('_bbxihryy', id.zbase32);
+                    assert.strictEqual ('9223372036854775807', id.seq);
+                    assert.strictEqual ('_b8999999999999', id.zbase32);
+                    assert.strictEqual ('_:b8999999999999', id.bnode);
                     assert.strictEqual (
-                        'https://test.waldmeta.org/.well-known/genid/_bbxihryy',
+                        'https://test.waldmeta.org/.well-known/genid/_b8999999999999',
                         id.uri
                     );
                     assert.isUndefined (id.shortUri);
