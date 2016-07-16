@@ -61,6 +61,17 @@ in the configuration.  Example:
     // id.shortUri => "https://mus.ic/soxejyy"
 
 
+Blank nodes
+-----------
+
+In some systems you don't want to manage blank nodes, and it may be useful to
+[skolemize](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#section-skolemization)
+them.  wald:mint has special support for that.
+
+    minter.bnode ().then (uri => console.log (uri));
+    // 'https://example.org/.well-known/genid/bnxejyy'
+
+
 License
 =======
 

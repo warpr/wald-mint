@@ -45,7 +45,7 @@
 
     function redisConnection () {
         const client = redis.createClient (redisUri, {
-            prefix: 'https://test.waldmeta.org/mint/',
+            prefix: 'https://test.waldmeta.org/',
             string_numbers: true,
         });
         client.on ('error', (err) => console.log ('ERROR: ', err));
@@ -60,14 +60,15 @@
             const getValue = nodefn.lift (client.get.bind (client));
             const setValue = nodefn.lift (client.set.bind (client));
 
-            setValue ('redisTest', 23)
-                .then (_ => getValue ('redisTest'))
+
+            setValue ('mint/redisTest', 23)
+                .then (_ => getValue ('mint/redisTest'))
                 .then (reply => assert.strictEqual ('23', reply))
-                .then (_ => when (client.incr ('redisTest')))
-                .then (_ => getValue ('redisTest'))
+                .then (_ => when (client.incr ('mint/redisTest')))
+                .then (_ => getValue ('mint/redisTest'))
                 .then (reply => assert.strictEqual ('24', reply))
-                .then (_ => when (client.incr ('redisTest')))
-                .then (_ => getValue ('redisTest'))
+                .then (_ => when (client.incr ('mint/redisTest')))
+                .then (_ => getValue ('mint/redisTest'))
                 .then (reply => assert.strictEqual ('25', reply))
                 .then (done);
         });
@@ -149,8 +150,9 @@
 
             const minter = mint.factory (cfg);
 
-            setValue ('artist', 0)
-                .then (_ => setValue ('song', 0))
+
+            setValue ('mint/artist', 0)
+                .then (_ => setValue ('mint/song', 0))
                 .then (_ => minter.newId ('artist'))
                 .then (id => {
                     assert.strictEqual ('1', id.seq);
@@ -188,7 +190,11 @@
 
             const minter = mint.factory (cfg);
 
+<<<<<<< HEAD
             setValue ('song', 999999)
+=======
+            setValue ('mint/song', 999999)
+>>>>>>> skolemize
                 .then (_ => minter.newId ('song'))
                 .then (id => {
                     assert.strictEqual ('1000000', id.seq);
@@ -197,6 +203,34 @@
                     assert.isUndefined (id.shortUri);
                 })
                 .then (done);
+<<<<<<< HEAD
+=======
+        });
+
+        test ('minter (skolemize)', function (done) {
+            const client = redisConnection ();
+            const setValue = nodefn.lift (client.set.bind (client));
+
+            const cfg = {
+                baseUri: 'https://test.waldmeta.org/mint/',
+                entities: {song: 'so'}
+            };
+
+            const minter = mint.factory (cfg);
+
+            setValue ('.well-known/genid', 99999999)
+                .then (_ => minter.bnode ())
+                .then (id => {
+                    assert.strictEqual ('100000000', id.seq);
+                    assert.strictEqual ('_bbxihryy', id.zbase32);
+                    assert.strictEqual (
+                        'https://test.waldmeta.org/.well-known/genid/_bbxihryy',
+                        id.uri
+                    );
+                    assert.isUndefined (id.shortUri);
+                })
+                .then (done);
+>>>>>>> skolemize
         });
     });
 }));
