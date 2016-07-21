@@ -135,9 +135,6 @@
 
     suite ('wald:mint', function () {
         test ('minter', function (done) {
-            const client = redisConnection ();
-            const setValue = nodefn.lift (client.set.bind (client));
-
             const cfg = {
                 baseUri: 'https://test.waldmeta.org/mint/',
                 shortUri: 'https://t.waldmeta.org/',
@@ -149,8 +146,8 @@
 
             const minter = mint.factory (cfg);
 
-            setValue ('mint/artist', 0)
-                .then (_ => setValue ('mint/song', 0))
+            minter.reset ('artist')
+                .then (_ => minter.reset ('song'))
                 .then (_ => minter.newId ('artist'))
                 .then (id => {
                     assert.strictEqual ('1', id.seq);
@@ -179,9 +176,6 @@
         });
 
         test ('minter (no shortUri)', function (done) {
-            const client = redisConnection ();
-            const setValue = nodefn.lift (client.set.bind (client));
-
             const cfg = {
                 baseUri: 'https://test.waldmeta.org/mint/',
                 entities: {
@@ -191,7 +185,7 @@
 
             const minter = mint.factory (cfg);
 
-            setValue ('mint/song', 999999)
+            minter.reset ('song', 999999)
                 .then (_ => minter.newId ('song'))
                 .then (id => {
                     assert.strictEqual ('1000000', id.seq);
@@ -204,9 +198,6 @@
         });
 
         test ('minter (skolemize)', function (done) {
-            const client = redisConnection ();
-            const setValue = nodefn.lift (client.set.bind (client));
-
             const cfg = {
                 baseUri: 'https://test.waldmeta.org/mint/',
                 entities: {song: 'so'}
@@ -214,7 +205,7 @@
 
             const minter = mint.factory (cfg);
 
-            setValue ('.well-known/genid', '9223372036854775806')
+            minter.reset ('bnode', '9223372036854775806')
                 .then (_ => minter.bnode ())
                 .then (id => {
                     assert.strictEqual ('9223372036854775807', id.seq);
