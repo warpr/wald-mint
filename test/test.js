@@ -47,6 +47,21 @@
         redisUri = process.env.WALD_MINT_REDIS;
     }
 
+    const a = find.a;
+    const schema = find.namespaces.schema;
+    const cfg = {
+        baseUri: 'https://test.waldmeta.org/mint/',
+        shortUri: 'https://t.waldmeta.org/',
+        entities: {
+            artist: 'ar',
+            song: 'so',
+        },
+        types: {
+            'http://schema.org/MusicGroup': 'artist',
+            'http://schema.org/MusicRecording': 'song',
+        }
+    };
+
     function redisConnection () {
         const client = redis.createClient (redisUri, {
             prefix: 'https://test.waldmeta.org/',
@@ -139,15 +154,6 @@
 
     suite ('wald:mint', function () {
         test ('minter', function (done) {
-            const cfg = {
-                baseUri: 'https://test.waldmeta.org/mint/',
-                shortUri: 'https://t.waldmeta.org/',
-                entities: {
-                    artist: 'ar',
-                    song: 'so',
-                }
-            };
-
             const minter = mint.factory (cfg);
 
             minter.reset ('artist')
@@ -180,14 +186,9 @@
         });
 
         test ('minter (no shortUri)', function (done) {
-            const cfg = {
-                baseUri: 'https://test.waldmeta.org/mint/',
-                entities: {
-                    song: 'so',
-                }
-            };
-
-            const minter = mint.factory (cfg);
+            const myCfg = Object.assign ({}, cfg);
+            delete myCfg.shortUri;
+            const minter = mint.factory (myCfg);
 
             minter.reset ('song', 999999)
                 .then (_ => minter.newEntity ('song'))
@@ -202,11 +203,6 @@
         });
 
         test ('minter (skolemize)', function (done) {
-            const cfg = {
-                baseUri: 'https://test.waldmeta.org/mint/',
-                entities: {song: 'so'}
-            };
-
             const minter = mint.factory (cfg);
 
             minter.reset ('bnode', '9223372036854775806')
@@ -225,17 +221,6 @@
         });
 
         test ('minter (automatic)', function (done) {
-            const a = find.a;
-            const schema = find.namespaces.schema;
-
-            const cfg = {
-                baseUri: 'https://test.waldmeta.org/mint/',
-                entities: {song: 'so'},
-                types: {}
-            };
-
-            cfg.types[schema.MusicRecording] = 'song';
-
             const minter = mint.factory (cfg);
 
             const datastore = new N3.Store ();
