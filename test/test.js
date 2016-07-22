@@ -14,10 +14,12 @@
         'chai',
         'hex2dec',
         'jsverify',
+        'n3',
         'redis',
         'when',
         'when/node',
         'zbase32',
+        'wald-find',
         '../lib/mint'
     ];
 
@@ -36,7 +38,9 @@
     const nodefn = require ('when/node');
     const redis = require ('redis');
     const when = require ('when');
+    const find = require ('wald-find');
     const zbase32 = require ('zbase32');
+    const N3 = require ('n3');
 
     let redisUri = 'redis://127.0.0.1';
     if (process && process.env && process.env.WALD_MINT_REDIS) {
@@ -148,7 +152,7 @@
 
             minter.reset ('artist')
                 .then (_ => minter.reset ('song'))
-                .then (_ => minter.newId ('artist'))
+                .then (_ => minter.newEntity ('artist'))
                 .then (id => {
                     assert.strictEqual ('1', id.seq);
                     assert.strictEqual ('aryb', id.zbase32);
@@ -156,7 +160,7 @@
                     assert.strictEqual ('https://t.waldmeta.org/aryb', id.shortUri);
                     assert.isUndefined (id.bnode);
                 })
-                .then (_ => minter.newId ('artist'))
+                .then (_ => minter.newEntity ('artist'))
                 .then (id => {
                     assert.strictEqual ('2', id.seq);
                     assert.strictEqual ('aryn', id.zbase32);
@@ -164,7 +168,7 @@
                     assert.strictEqual ('https://t.waldmeta.org/aryn', id.shortUri);
                     assert.isUndefined (id.bnode);
                 })
-                .then (_ => minter.newId ('song'))
+                .then (_ => minter.newEntity ('song'))
                 .then (id => {
                     assert.strictEqual ('1', id.seq);
                     assert.strictEqual ('soyb', id.zbase32);
@@ -186,7 +190,7 @@
             const minter = mint.factory (cfg);
 
             minter.reset ('song', 999999)
-                .then (_ => minter.newId ('song'))
+                .then (_ => minter.newEntity ('song'))
                 .then (id => {
                     assert.strictEqual ('1000000', id.seq);
                     assert.strictEqual ('soxejyy', id.zbase32);
@@ -206,16 +210,56 @@
             const minter = mint.factory (cfg);
 
             minter.reset ('bnode', '9223372036854775806')
-                .then (_ => minter.bnode ())
+                  .then (_ => minter.bnode ())
+                  .then (id => {
+                      assert.strictEqual ('9223372036854775807', id.seq);
+                      assert.strictEqual ('_b8999999999999', id.zbase32);
+                      assert.strictEqual ('_:b8999999999999', id.bnode);
+                      assert.strictEqual (
+                          'https://test.waldmeta.org/.well-known/genid/_b8999999999999',
+                          id.uri
+                      );
+                      assert.isUndefined (id.shortUri);
+                  })
+                  .then (done);
+        });
+
+        test ('minter (automatic)', function (done) {
+            const a = find.a;
+            const schema = find.namespaces.schema;
+
+            const cfg = {
+                baseUri: 'https://test.waldmeta.org/mint/',
+                entities: {song: 'so'},
+                types: {}
+            };
+
+            cfg.types[schema.MusicRecording] = 'song';
+
+            const minter = mint.factory (cfg);
+
+            const datastore = new N3.Store ();
+            datastore.addTriple ('_:b0', a, schema.MusicRecording);
+            datastore.addTriple ('_:b1', schema.name, '"example"');
+
+            minter.reset ('bnode', '0')
+                .then (_ => minter.reset ('song', '0'))
+                .then (_ => minter.newId ('_:b1', datastore))
                 .then (id => {
-                    assert.strictEqual ('9223372036854775807', id.seq);
-                    assert.strictEqual ('_b8999999999999', id.zbase32);
-                    assert.strictEqual ('_:b8999999999999', id.bnode);
+                    assert.strictEqual ('1', id.seq);
+                    assert.strictEqual ('_byb', id.zbase32);
+                    assert.strictEqual ('_:byb', id.bnode);
                     assert.strictEqual (
-                        'https://test.waldmeta.org/.well-known/genid/_b8999999999999',
+                        'https://test.waldmeta.org/.well-known/genid/_byb',
                         id.uri
                     );
-                    assert.isUndefined (id.shortUri);
+                })
+                .then (_ => minter.newId ('_:b0', datastore))
+                .then (id => {
+                    assert.strictEqual ('1', id.seq);
+                    assert.strictEqual ('soyb', id.zbase32);
+                    assert.strictEqual ('https://test.waldmeta.org/mint/song/soyb', id.uri);
+                    assert.isUndefined (id.bnode);
                 })
                 .then (done);
         });

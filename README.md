@@ -23,17 +23,17 @@ also need to decide on a base URI for your site.  The configuration might look l
             artist: "ar",
             song: "so",
         }
-    };
+    }
 
 With that configuration, you can start minting identifiers:
 
     const mint = require ('wald-mint');
     const minter = mint.factory (cfg);
 
-    minter.newId ('song').then (id => console.log (id));
+    minter.newEntity ('song').then (id => console.log (id));
 
 If your song database has a lot of songs, and you're minting a new identifier for the
-1000000th song in the database, the result from the newId call will look like:
+1000000th song in the database, the result from the newEntity call will look like:
 
     {
         seq: '1000000',
@@ -45,9 +45,9 @@ If your song database has a lot of songs, and you're minting a new identifier fo
 Short URIs
 ----------
 
-The zbase32 value returned by newId uniquely identifies a resource in your system (assuming
+The zbase32 value returned by newEntity uniquely identifies a resource in your system (assuming
 you picked a unique prefix).  One use for this raw identifier (instead of the full uri) is to
-create short URIs.  As a convenience newId() will do this for you if you specify a shortUri
+create short URIs.  As a convenience newEntity() will do this for you if you specify a shortUri
 in the configuration.  Example:
 
     const mint = require ('wald-mint');
@@ -57,7 +57,7 @@ in the configuration.  Example:
         entities: { song: "so" }
     };
 
-    minter.newId ('song').then (id => console.log (id.shortUri));
+    minter.newEntity ('song').then (id => console.log (id.shortUri));
     // id.shortUri => "https://mus.ic/soxejyy"
 
 
@@ -72,6 +72,44 @@ them.  wald:mint can generate unique skolemized blank nodes:
     // id.seq   => '1000000'
     // id.bnode => '_:bxejyy'
     // id.uri   => 'https://example.org/.well-known/genid/_bxejyy'
+
+
+Automatic entity vs blank node
+------------------------------
+
+wald:mint can automatically mint both new entity IDs and skolemized blank nodes for depending
+on the rdf:type of the resource.  If you wish to use this feature, extend the configuration
+with a "types" key which maps a type of resource to an entity name, for example:
+
+    const cfg = {
+        baseUri: "https://example.org/",
+        entities: {
+            artist: "ar",
+            song: "so",
+        }
+        types: {
+            'http://schema.org/MusicGroup': 'artist',
+            'http://schema.org/MusicRecording': 'song',
+        }
+    }
+
+
+To automatically create new identifiers call newId like this:
+
+    const mint = require ('wald-mint');
+    const find = require ('wald-find');
+    const minter = mint.factory (cfg);
+    const schema = find.namespaces.schema;
+    const a = find.a;
+
+    const datastore = new N3.Store ();
+    datastore.addTriple ('_:b0', a, schema.MusicRecording);
+    datastore.addTriple ('_:b1', schema.name, '"example"');
+
+    minter.newId ('_:b0', datastore).then (id0 => console.log (id0));
+    minter.newId ('_:b1', datastore).then (id1 => console.log (id1));
+    // id0.uri => 'https://example.org/song/soxejyy'
+    // id1.uri => 'https://example.org/.well-known/genid/_bxejyy'
 
 
 Limitations
