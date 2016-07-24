@@ -6,4 +6,4 @@ services:
 all_tests:
   script:
    - npm install
-   - bin/test
+   - bin/test redis://redis

@@ -6,6 +6,10 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd "$DIR/.."
 
+if [ ! -z "$1" ]; then
+    export WALD_MINT_REDIS="$1"
+fi
+
 ESLINT="node_modules/.bin/eslint --rulesdir eslint_rules lib test"
 MOCHA="node_modules/mocha/bin/mocha --harmony --harmony-proxies --ui tdd --reporter spec test/test.js"
 
